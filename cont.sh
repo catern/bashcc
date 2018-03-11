@@ -9,6 +9,7 @@ function name() {
     mktemp -u --tmpdir=$statedir $template
 }
 
+#### Process monitoring functions
 function proc_create() {
     procfile=$(name proc.XXXX)
     touch $procfile
@@ -26,9 +27,15 @@ function proc_kill() {
     kill $(cat $procfile) 2>/dev/null || true
 }
 
+#### File-based messaging functions
 function file_size() {
     file=$1; shift
     stat --printf="%s" $file
+}
+
+function file_send_line() {
+    file=$1; shift
+    echo "$@" >> $file
 }
 
 function file_wait_for_one_line() {
@@ -38,95 +45,77 @@ function file_wait_for_one_line() {
     proc=$(proc_create)
     proc_monitor $proc tail --bytes=+$bytecount --follow $file | { head -n1; proc_kill $proc; }
 }
+# file=$1; shift
+# size=$(file_size $file)
+# file_wait_for_one_line $file $size
 
-# raise and continue should be separate
-# this way only allows one continuation to be blocked at a prompt at a time.
-# we can't switch between continuations!
-
-# we need to send the continuation file to the prompt
-# and then block on it
-
-# and maybe msg_call also should be broken up?
-
-# the continuation file changes each time we yield.
-function msg_new() {
-    template=$1; shift
-    msgqueue=$(name continuation.XXXX)
-    touch $msgqueue
-    echo $msgqueue
-}
-
-function msg_send() {
-    file=$1; shift
-    echo "$@" >> $file
-}
-
-function msg_receive_once() {
-    msgqueue=$1; shift
-    file_wait_for_one_line $msgqueue 0
-}
-
-function msg_receive_new() {
-    msgqueue=$1; shift
-    size=$1; shift
-    file_wait_for_one_line $msgqueue $size
-}
-
-function msg_old_marker() {
-    msgqueue=$1; shift
-    file_size $msgqueue
-}
-
-function run_something() {
-    prompt=$1; shift
-    prompt_old_marker=$(msg_old_marker $prompt)
-    msg_send
-    # do thing
-    msg_receive_new $prompt $prompt_old_marker
-}
-
+#### Continuation functions
 function make_prompt() {
     prompt=$(name prompt.XXXX)
-    mkdir $prompt
-    touch $prompt/raise
-    touch $prompt/continue
+    touch $prompt
     echo $prompt
 }
 
-function wrap_return() {
-    prompt=$1; shift
-    stdout=$(name stdout.XXXX)
-    "$@" $prompt > $stdout
-    msg_send $prompt "return: $stdout"
-}
-
-function push_subcont() {
+function invoke() {
     prompt=$1; shift
     continuation=$1; shift
+    prompt_size=$(file_size $prompt)
+    file_send_line $continuation "$@"
+    file_wait_for_one_line $prompt $prompt_size
 }
 
 function run() {
-    # create a prompt
-    # fork off child
-    # block on prompt
-    # and on child?
-    proc=$(proc_create)
-    prompt=$(make_prompt)
-    proc_monitor $proc wrap_return $prompt "$@" &
-    # clean this guy up somehow??
-    # clean up the running process, I mean
-    # no just leave him around
-    
-    tail -c+0 -f $prompt/raise
+    prompt=$1; shift
+    prompt_size=$(file_size $prompt)
+    stdout=$(name stdout.XXXX)
+    {
+	"$@" $prompt;
+	# Translate the return of the function into a message to the prompt.
+        file_send_line $prompt "return: $stdout";
+    } >$stdout </dev/null &
+    file_wait_for_one_line $prompt $prompt_size
 }
 
 function yield() {
     prompt=$1; shift
-    continuation=$(msg_new continuation.XXXX)
-    msg_send $prompt "yield: $continuation" "$@"
-    msg_receive_once $continuation
+    continuation=$(name continuation.XXXX)
+    touch $continuation
+    file_send_line $prompt "yield: $continuation message:" "$@"
+    file_wait_for_one_line $continuation 0
 }
 
-file=$1; shift
-size=$(file_size $file)
-file_wait_for_one_line $file $size
+function some_func() {
+    prompt=$1; shift
+    yield $prompt "hello"
+    yield $prompt "hello2"
+    echo "bye"
+}
+
+yield_re='yield: (.*) message: (.*)'
+return_re='return: (.*)'
+prompt=$(make_prompt)
+response=$(run $prompt some_func)
+while :;
+do
+    if [[ $response =~ $yield_re ]]
+    then
+	continuation="${BASH_REMATCH[1]}"
+	message="${BASH_REMATCH[2]}"
+	echo "yielded with message $message"
+	echo "invoking again"
+	response=$(invoke $prompt $continuation "restarted")
+    elif [[ $response =~ $return_re ]]
+    then
+	file="${BASH_REMATCH[1]}"
+	echo "returned! we're done!"
+	echo "message we got was:"
+	echo "-----------"
+	cat $file
+	echo "-----------"
+	break
+    else
+	echo "disaster has struck, we got some incomprehensible message"
+	echo "got $response"
+	exit 1
+    fi
+done
