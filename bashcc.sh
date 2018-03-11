@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -o nounset
 set -o errexit
 
@@ -95,63 +95,31 @@ function yield() {
     file_wait_for_one_line $continuation 0
 }
 
-# a hack to do early return without having to case on it in the handler
-function early_return() {
-    prompt=$1; shift
-    file=$(name early_return.XXXX)
-    echo "$@" > $file
-    file_send_line $prompt "return: $file"
-    exit 0
+function dummy_run_with_prompt() {
+    prompt=$(make_prompt)
+    response=$(run $prompt "$@")
+    while :;
+    do
+        if [[ $response =~ $yield_re ]]
+        then
+  	    continuation="${BASH_REMATCH[1]}"
+  	    message="${BASH_REMATCH[2]}"
+  	    echo "yielded with message $message"
+  	    echo "invoking again"
+  	    response=$(invoke $prompt $continuation "restarted")
+        elif [[ $response =~ $return_re ]]
+        then
+  	    file="${BASH_REMATCH[1]}"
+  	    echo "returned! we're done!"
+  	    echo "message we got was:"
+  	    echo "-----------"
+  	    cat $file
+  	    echo "-----------"
+  	    break
+        else
+  	    echo "disaster has struck, we got some incomprehensible message"
+  	    echo "got $response"
+  	    exit 1
+        fi
+    done
 }
-
-# just some arbitrary yielding function
-function some_func() {
-    prompt=$1; shift
-    yield $prompt "hello"
-    yield $prompt "hello2"
-    echo "bye"
-}
-
-function recursive_multiply_args() {
-    prompt=$1; shift
-    echo "invoked with $@" >&2
-    first=$1; shift
-    if [[ $# -eq 0 ]]; then
-	echo "base case with $first" >&2
-	echo $first
-    elif [[ $first -eq 0 ]]; then
-	# comment out this elif case to see the full recursion
-	early_return $prompt 0
-    else
-	echo "recursing on $@" >&2
-	rest=$(recursive_multiply_args $prompt "$@")
-	echo $(( first * rest ))
-    fi
-}
-
-prompt=$(make_prompt)
-response=$(run $prompt recursive_multiply_args 1 2 0 4 5)
-while :;
-do
-    if [[ $response =~ $yield_re ]]
-    then
-	continuation="${BASH_REMATCH[1]}"
-	message="${BASH_REMATCH[2]}"
-	echo "yielded with message $message"
-	echo "invoking again"
-	response=$(invoke $prompt $continuation "restarted")
-    elif [[ $response =~ $return_re ]]
-    then
-	file="${BASH_REMATCH[1]}"
-	echo "returned! we're done!"
-	echo "message we got was:"
-	echo "-----------"
-	cat $file
-	echo "-----------"
-	break
-    else
-	echo "disaster has struck, we got some incomprehensible message"
-	echo "got $response"
-	exit 1
-    fi
-done
