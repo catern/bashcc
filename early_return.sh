@@ -29,4 +29,5 @@ function recursive_multiply_args() {
     fi
 }
 
-dummy_run_with_prompt recursive_multiply_args 1 2 0 4 5
+prompt=$(make_prompt)
+dummy_run_with_prompt $prompt recursive_multiply_args $prompt 1 2 0 4 5

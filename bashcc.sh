@@ -72,14 +72,13 @@ yield_re='yield: (.*) message: (.*)'
 # return: [return value, stored in a file]
 return_re='return: (.*)'
 
-# Prompt -> Function -> YieldValue
+# Prompt -> arbitrary command -> YieldValue
 function run() {
     prompt=$1; shift
-    command=$1; shift
     prompt_size=$(file_size $prompt)
     stdout=$(name stdout.XXXX)
     {
-	"$command" $prompt "$@";
+	"$@";
 	# Translate the return of the function into a message to the prompt.
         file_send_line $prompt "return: $stdout";
     } >$stdout </dev/null &
@@ -96,7 +95,7 @@ function yield() {
 }
 
 function dummy_run_with_prompt() {
-    prompt=$(make_prompt)
+    prompt=$1; shift
     response=$(run $prompt "$@")
     while :;
     do

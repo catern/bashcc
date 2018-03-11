@@ -11,4 +11,5 @@ function some_func() {
     echo "bye"
 }
 
-dummy_run_with_prompt some_func
+prompt=$(make_prompt)
+dummy_run_with_prompt $prompt some_func $prompt
