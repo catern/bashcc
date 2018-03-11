@@ -9,6 +9,13 @@ These two powerful techniques have not yet been joined together before this mome
 This library will provide a more familiar programming environment for functional programmers in bash,
 and give bash programmers access to the advanced abstraction techniques of modern functional languages.
 
+* Improvements to be done
+** use bash's dynamic scope
+   bash has a great feature which is sadly unappreciated: dynamic scope.
+   This is activated by using "local" before a variable assignment.
+
+   We should employ this to make our test programs easier to understand.
+
 * inspirations
 
 - https://www.cs.indiana.edu/~dyb/pubs/LaSC-10-3-pp223-236.pdf
