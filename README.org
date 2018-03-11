@@ -6,7 +6,7 @@ And among sysadmins,
 the bash programming language is renowned for the maintainability of programs written in it.
 
 These two powerful techniques have not yet been joined together before this moment.
-Hopefully this library will provide a more familiar programming environment for functional programmers in bash,
+This library will provide a more familiar programming environment for functional programmers in bash,
 and give bash programmers access to the advanced abstraction techniques of modern functional languages.
 
 * inspirations
