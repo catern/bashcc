@@ -11,6 +11,6 @@ and give bash programmers access to the advanced abstraction techniques of moder
 
 * inspirations
 
-https://www.cs.indiana.edu/~dyb/pubs/LaSC-10-3-pp223-236.pdf
-http://okmij.org/ftp/continuations/caml-shift-journal.pdf
-http://www.bobhobbs.com/files/kr_lovecraft.html
+- https://www.cs.indiana.edu/~dyb/pubs/LaSC-10-3-pp223-236.pdf
+- http://okmij.org/ftp/continuations/caml-shift-journal.pdf
+- http://www.bobhobbs.com/files/kr_lovecraft.html
