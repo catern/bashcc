@@ -1,0 +1,85 @@
+OK let's just be TOTALLY insane and garbage
+
+we'll use a yield/run-style
+
+And just write all the stuff to files
+and use tail -f to monitor it
+and use read -t0 to poll multiple files
+(and we can pass continuations around by passing around filenames)
+hmm, though... we want to resume the stream at the point that it reached.
+oh, no, continuations are inherently blocked.
+so we just tail -f to the end of the file. presumably tail -n0 -f I guess
+
+ok and also I think I should have like...
+tail -f $in | wrapper "$@" > $out
+
+and redirect stdout inside wrapper to a file, so the application can still use stdout
+and when returning, output "return" and the path of that file
+
+that seems suitably nuts
+
+basically I think that's slightly nicer because,
+when I say,
+"implementing yield/generators for bash!!!"
+i'll feel bad if yield doesn't just go to stdout lol
+it's resumable yield that's the interesting thing, anyway
+more like "coroutines for bash" i guess
+
+
+actually I just need one directory per prompt
+and all IO goes there
+note there is a race when sending a message then tail -f'ing, where tail -f might not start up until after the response comes in
+
+i should have the tail -f based call/response/wait thing be very^Wsomewhat^Wslightly separated from the rest of it
+because it's really just a generic call/respond/wait messaging thing
+
+can avoid that race by appending a random string first lol
+and checking for it and ignoring it
+
+maybe I can just a single file with lines prefixed with "server" or "client" and grep to select the ones I want, would be handy for debugging
+
+hmm how do I gc them lol ¯\_(ツ)_/¯
+maybe I can wrap them in supervise and use unlinkwait :)
+* messaging
+
+  So if I was in normal process land, I'd just...
+  Write message to pipe
+  Block on pipe to read out response message.
+
+  Two pipes, tuesday again no problem.
+
+  Can I achieve that?
+
+  Also if I was in normal process land, I could do it with files and blocking if I had a helper.
+  Write message to file
+  Block on file-update eventfd
+  Read the additional data from the file as the eventfd foretold.
+
+  Without a helper, I can do it like this:
+  size = size of receipt file
+  Write message to send file
+  Go to size in receipt file, spin on reading from receipt file until a newline is seen
+
+I could kill the tail with supervise :)
+
+ah, just wrap the tail and store the pid!
+
+that is portable to a supervise approach but doesn't require supervise
+* possible design that doesn't support multi-prompts
+take over stdout, application is no longer allowed to write to stdout
+
+they must use function which prefixes stdout writes with "value"
+
+or maybe just, they use a "return_string" function?
+
+no it's better to wrap stdout into a file and return it through the pipe mechanism.
+as the final thing
+
+
+* thing to implement on top
+I can implement:
+state
+exceptions
+dynamic variables
+
+look up useful monads maybe? I can reproduce them with continuations
