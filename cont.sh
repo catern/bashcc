@@ -50,12 +50,14 @@ function file_wait_for_one_line() {
 # file_wait_for_one_line $file $size
 
 #### Continuation functions
+# returns a fresh Prompt
 function make_prompt() {
     prompt=$(name prompt.XXXX)
     touch $prompt
     echo $prompt
 }
 
+# Prompt -> Continuation -> YieldValue
 function invoke() {
     prompt=$1; shift
     continuation=$1; shift
@@ -64,6 +66,13 @@ function invoke() {
     file_wait_for_one_line $prompt $prompt_size
 }
 
+# YieldValue is two possible structures:
+# yield: [continuation] message: [arbitrary string]
+yield_re='yield: (.*) message: (.*)'
+# return: [return value, stored in a file]
+return_re='return: (.*)'
+
+# Prompt -> Function -> YieldValue
 function run() {
     prompt=$1; shift
     prompt_size=$(file_size $prompt)
@@ -76,6 +85,7 @@ function run() {
     file_wait_for_one_line $prompt $prompt_size
 }
 
+# str -> str
 function yield() {
     prompt=$1; shift
     continuation=$(name continuation.XXXX)
@@ -84,6 +94,7 @@ function yield() {
     file_wait_for_one_line $continuation 0
 }
 
+# just some arbitrary yielding function
 function some_func() {
     prompt=$1; shift
     yield $prompt "hello"
@@ -91,8 +102,6 @@ function some_func() {
     echo "bye"
 }
 
-yield_re='yield: (.*) message: (.*)'
-return_re='return: (.*)'
 prompt=$(make_prompt)
 response=$(run $prompt some_func)
 while :;
