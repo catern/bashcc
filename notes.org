@@ -77,6 +77,8 @@ as the final thing
 
 
 * thing to implement on top
+implement pipe!!!!!!! aka coroutines communicating over a channel
+
 I can implement:
 state
 exceptions
