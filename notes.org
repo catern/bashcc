@@ -78,6 +78,10 @@ as the final thing
 
 * thing to implement on top
 implement pipe!!!!!!! aka coroutines communicating over a channel
+"this allows multiple coordinating state machines to communicate, as recently pioneered by Go.
+while we have not yet implemented parallelism, it should be straightforward."
+
+also implement unbuffered channels, that's actually a little neat
 
 I can implement:
 state
@@ -86,8 +90,61 @@ dynamic variables
 
 look up useful monads maybe? I can reproduce them with continuations
 
-* future work
+implemented:
+exceptions
+early return
+simple yielding
 
+possible other examples:
+logging
+dynamic scope
+state
+asyncio
+concurrency
+
+the list monad???
+that requires fork :(
+just like non-determinism
+the reverse state monad??
+probably also requires scope
+
+* how to implement fork
+OK. So.
+
+Do I really need fork?
+
+I feel like probably yes!
+
+** first try it in python
+   This way I can validate it.
+   also this way I have multi-language continuations, hehehe
+
+** using a loadable builtin
+   hmm, but it might be actually faster to just assume I have gcc and compile a built-in
+
+   or even bundle a built-in?
+** using gdb hack
+   This is wonderful but slow as heck.
+   Hmm, but maybe I don't need to worry?
+
+   I can optimize gdb by sharing one between everyone.
+
+   At startup I'll define a macro or command or whatever it is,
+   to attach to a gdb.
+** use python to do the ptrace?
+   Technically possible.
+** leave it as future work
+
+   Yes let's do this.
+
+   and let's just implement dynamic scope and state and then write the paper
+
+* future work
+effect system
+
+import things from shell to functional programming
+
+multi-shot
 * jokes
 ** currying
 Ever since currying was invented by Ken Thompson in 1971 at Bell labs,
@@ -96,6 +153,7 @@ the Unix shell and functional programming have enjoyed a close relationship.
 invented,
 when he invented shell scripting
 when he combined "rsh" with a username and host to form a closure providing remote execution services.
+when he partially-applied rsh to a user and hostname while debugging things.
 
 shell scripting developed the concept of currying
 
