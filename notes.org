@@ -84,11 +84,33 @@ dynamic variables
 
 look up useful monads maybe? I can reproduce them with continuations
 
-* jokes
+* future work
 
+* jokes
+** currying
 Ever since currying was invented by Ken Thompson in 1971 at Bell labs,
 the Unix shell and functional programming have enjoyed a close relationship.
+
+invented,
+when he invented shell scripting
+when he combined "rsh" with a username and host to form a closure providing remote execution services.
+
+shell scripting developed the concept of currying
 
 (joke about the name of currying?)
 
 currying was inspired by bash command concatenation
+** shell shift and shift/reset joke
+The Unix shell has long had "shift",
+but due to budget cuts at Bell Labs,
+and specification errors 
+stemming from the use of a malfunctioning time travel device to obtain papers from the 90s,
+it only provides a relatively weak form of continuations.
+And, lacking reset, the continuations have nothing to delimit them.
+
+Rather than build our continuation library on top of the existing "shift" infrastructure,
+we thought it was best to get a clean start.
+** one shot
+bash being a unityped language, supporting only strings,
+we felt it was was thematically appropriate that its continuations also be unicontinuations,
+supporting only one invocation.
