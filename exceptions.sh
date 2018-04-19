@@ -7,20 +7,6 @@ function raise() {
     yield $exception_handler "$@"
 }
 
-function liker() {
-    if [[ $1 -eq 12 ]];
-    then raise "I don't like $1!!!"
-    else echo "I like $1" >&2
-    fi
-}
-
-function evaluator() {
-    seq 4 | while read -r; do liker $REPLY; done
-    seq 10 | while read -r; do liker $REPLY; done
-    seq 14 | while read -r; do liker $REPLY; done
-    echo "reached end of func3" >&2
-}
-
 function try() {
     exception_handler=$(make_prompt)
     response=$(run $exception_handler "$@")
@@ -48,6 +34,20 @@ function try() {
   	    exit 1
         fi
     done
+}
+
+function liker() {
+    if [[ $1 -eq 12 ]];
+    then raise "I don't like $1!!!"
+    else echo "I like $1" >&2
+    fi
+}
+
+function evaluator() {
+    seq 4 | while read -r; do liker $REPLY; done
+    seq 10 | while read -r; do liker $REPLY; done
+    seq 14 | while read -r; do liker $REPLY; done
+    echo "reached end of func3" >&2
 }
 
 function main() {
